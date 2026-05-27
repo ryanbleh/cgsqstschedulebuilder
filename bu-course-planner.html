@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BU Course Planner — CGS &amp; Questrom</title>
+<style>
+:root {
+  --red: #CC0000;
+  --red-dark: #990000;
+  --red-light: #FFF0F0;
+  --bg: #F4F6F9;
+  --card: #FFFFFF;
+  --border: #DDE2EA;
+  --text: #1A1E27;
+  --muted: #6B7280;
+  --success: #16A34A;
+  --warn: #B45309;
+  --cat-hu: #7C3AED;
+  --cat-ns: #059669;
+  --cat-rh: #D97706;
+  --cat-ss: #DC2626;
+  --cat-qst: #CC0000;
+  --cat-career: #2563EB;
+  --cat-gbe: #0891B2;
+  --cat-econ: #047857;
+  --cat-math: #6D28D9;
+  --cat-writing: #BE185D;
+  --cat-elective: #6B7280;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* ── Header ── */
+.header {
+  background: var(--red);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-logo { font-size: 1.5rem; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+.header-logo span { opacity: .65; font-weight: 400; font-size: 1rem; margin-left: 4px; }
+.header-sub { font-size: .8rem; opacity: .8; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── Controls bar ── */
+.controls {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.ctrl-group { display: flex; align-items: center; gap: 8px; }
+.ctrl-label { font-size: .8rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.ctrl-input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: .8rem;
+  font-family: inherit;
+  outline: none;
+  width: 90px;
+  transition: border-color .15s;
+}
+.ctrl-input:focus { border-color: var(--red); }
+.ctrl-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: .8rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.ctrl-btn:hover { border-color: var(--red); color: var(--red); }
+.ctrl-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+.ctrl-sep { width: 1px; height: 20px; background: var(--border); }
+
+/* ── Main layout ── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  height: calc(100vh - 97px);
+}
+
+/* ── Planner area ── */
+.planner {
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Year group ── */
+.year-group { margin-bottom: 28px; }
+.year-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.year-badge {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+.year-badge.cgs { background: #EDE9FE; color: #5B21B6; }
+.year-badge.questrom { background: #FFE4E4; color: var(--red-dark); }
+.year-header-line { flex: 1; height: 1px; background: var(--border); }
+.year-credits { font-size: .75rem; color: var(--muted); }
+
+.semesters-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ── Semester card ── */
+.sem-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 250px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  overflow: visible;
+}
+.sem-card.is-summer { border-style: dashed; opacity: .92; }
+.sem-card.is-summer .sem-header { background: #F9FAFB; }
+
+.sem-header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  padding: 9px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sem-title { font-weight: 700; font-size: .85rem; }
+.sem-credits-badge {
+  font-size: .7rem;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--muted);
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.course-list { padding: 8px; }
+
+/* ── Course item ── */
+.course-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 4px;
+  border-radius: 8px;
+  margin-bottom: 3px;
+  position: relative;
+}
+.course-item:hover { background: var(--bg); }
+.course-item:hover .remove-btn { opacity: 1; }
+
+.cat-bar {
+  width: 3px;
+  min-height: 32px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--border);
+  align-self: stretch;
+}
+
+.course-body { flex: 1; min-width: 0; position: relative; }
+
+.course-code-wrap { position: relative; }
+.course-code-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 7px;
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s;
+  background: #fff;
+}
+.course-code-input:focus { border-color: var(--red); }
+.course-item.waived .course-code-input { text-decoration: line-through; color: var(--muted); }
+
+.course-name {
+  font-size: .68rem;
+  color: var(--muted);
+  margin-top: 2px;
+  padding: 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.course-meta { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+
+.sidebar-na {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  transition: background .1s;
+  user-select: none;
+}
+.sidebar-na:hover { background: #F3F4F6; }
+.sidebar-na input[type="checkbox"] {
+  width: 11px;
+  height: 11px;
+  cursor: pointer;
+  accent-color: var(--muted);
+  margin: 0;
+  flex-shrink: 0;
+}
+.sidebar-na span {
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.req-item.waived .sidebar-na span { color: var(--cat-hu); }
+.req-item.waived .sidebar-na input { accent-color: var(--cat-hu); }
+
+.course-credits-tag {
+  font-size: .62rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all .15s;
+}
+.remove-btn:hover { background: #FFE4E4; color: var(--red); }
+
+.add-course-btn {
+  width: 100%;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 5px;
+  margin-top: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: .75rem;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all .15s;
+}
+.add-course-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.add-course-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ── Autocomplete ── */
+.ac-dropdown {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.13);
+  z-index: 1000;
+  max-height: 210px;
+  overflow-y: auto;
+  display: none;
+}
+.ac-dropdown.open { display: block; }
+.ac-item {
+  padding: 7px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--bg);
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover, .ac-item.focused { background: var(--bg); }
+.ac-code { font-weight: 700; font-size: .78rem; color: var(--text); }
+.ac-name { font-size: .7rem; color: var(--muted); margin-top: 1px; }
+.ac-cat {
+  float: right;
+  font-size: .62rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  margin-top: 1px;
+}
+
+/* ── Requirements sidebar ── */
+.sidebar {
+  background: #fff;
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+  height: 100%;
+}
+.req-section-title {
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--red);
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.req-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.req-section-title:first-child { margin-top: 0; }
+
+.req-group { margin-bottom: 12px; }
+.req-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.req-group-name { font-size: .78rem; font-weight: 600; }
+.req-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.req-badge.done { background: #DCFCE7; color: #15803D; }
+.req-badge.partial { background: #FEF9C3; color: #92400E; }
+.req-badge.empty { background: var(--bg); color: var(--muted); }
+
+.req-bar { height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 6px; overflow: hidden; }
+.req-bar-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width .35s ease; }
+.req-bar-fill.done { background: var(--success); }
+
+.req-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: .73rem;
+  color: var(--muted);
+  padding: 2px 0;
+  line-height: 1.35;
+}
+.req-item.met { color: var(--success); }
+.req-item.waived { color: var(--cat-hu); }
+
+.req-check {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+}
+.req-item.met .req-check { background: var(--success); border-color: var(--success); color: #fff; }
+.req-item.waived .req-check { background: var(--cat-hu); border-color: var(--cat-hu); color: #fff; }
+
+.total-box {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.total-box .lbl { font-size: .75rem; color: var(--muted); }
+.total-box .num { font-size: 1.3rem; font-weight: 800; color: var(--red); }
+.total-box .denom { font-size: .8rem; font-weight: 600; color: var(--muted); }
+
+/* ── Category color helpers ── */
+.cat-CGS-HU { color: var(--cat-hu); }
+.cat-CGS-NS { color: var(--cat-ns); }
+.cat-CGS-RH { color: var(--cat-rh); }
+.cat-CGS-SS { color: var(--cat-ss); }
+.cat-QST-REQ { color: var(--cat-qst); }
+.cat-QST-CAREER { color: var(--cat-career); }
+.cat-QST-GBE { color: var(--cat-gbe); }
+.cat-ECON { color: var(--cat-econ); }
+.cat-MATH { color: var(--cat-math); }
+.cat-WRITING { color: var(--cat-writing); }
+.cat-ELECTIVE { color: var(--cat-elective); }
+
+.bg-CGS-HU { background: #EDE9FE; color: #5B21B6; }
+.bg-CGS-NS { background: #D1FAE5; color: #065F46; }
+.bg-CGS-RH { background: #FEF3C7; color: #78350F; }
+.bg-CGS-SS { background: #FFE4E4; color: #991B1B; }
+.bg-QST-REQ { background: #FFE4E4; color: var(--red-dark); }
+.bg-QST-CAREER { background: #DBEAFE; color: #1E40AF; }
+.bg-QST-GBE { background: #CFFAFE; color: #0E7490; }
+.bg-ECON { background: #D1FAE5; color: #065F46; }
+.bg-MATH { background: #EDE9FE; color: #5B21B6; }
+.bg-WRITING { background: #FCE7F3; color: #9D174D; }
+.bg-ELECTIVE { background: #F3F4F6; color: #374151; }
+
+/* ── Scrollbars ── */
+.planner::-webkit-scrollbar, .sidebar::-webkit-scrollbar { width: 5px; }
+.planner::-webkit-scrollbar-thumb, .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Concentration picker ── */
+.conc-picker { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.conc-slot { display: flex; flex-direction: column; gap: 3px; }
+.conc-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: .75rem;
+  font-family: inherit;
+  background: #fff;
+  outline: none;
+  cursor: pointer;
+  color: var(--text);
+}
+.conc-select:focus { border-color: var(--red); }
+.conc-sub-label {
+  font-size: .63rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--muted);
+  margin: 6px 0 2px;
+}
+
+/* ── B-list toggle ── */
+.blist-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: .68rem;
+  color: var(--muted);
+  padding: 3px 7px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  transition: all .12s;
+}
+.blist-toggle:hover { border-color: currentColor; color: var(--text); }
+.blist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: .68rem;
+  color: var(--muted);
+  padding: 2px 0;
+  line-height: 1.3;
+}
+
+/* ── Overlap tags on course cards ── */
+.overlap-tags { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 3px; }
+.overlap-tag {
+  font-size: .58rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; height: auto; }
+  .sidebar { height: auto; border-left: none; border-top: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-logo">BU<span>Course Planner</span></div>
+      <div class="header-sub">CGS &amp; Questrom School of Business</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="total-header" style="font-size:.82rem;opacity:.85;">0 / 132 credits planned</span>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Entering Spring</span>
+    <input class="ctrl-input" type="number" id="entering-year" value="2026" min="2020" max="2035">
+  </div>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn active" id="toggle-summers">☀ Show Summer Sessions</button>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn" id="save-btn">🔗 Copy Link</button>
+  <button class="ctrl-btn" id="clear-btn">🗑 Clear All</button>
+</div>
+
+<div class="main">
+  <div class="planner" id="planner"></div>
+  <aside class="sidebar" id="sidebar"></aside>
+</div>
+
+<script>
+// ─── COURSE CATALOG ───────────────────────────────────────────────────────────
+const CATALOG = [
+  // CGS Humanities
+  { code:'CGS HU 103', name:'Humanities I', credits:4, cat:'CGS-HU' },
+  { code:'CGS HU 104', name:'Humanities IV', credits:4, cat:'CGS-HU' },
+  { code:'CGS HU 201', name:'Humanities II', credits:4, cat:'CGS-HU' },
+  { code:'CGS HU 202', name:'Humanities III', credits:4, cat:'CGS-HU' },
+  // CGS Natural Sciences
+  { code:'CGS NS 201', name:'Natural Sciences I', credits:4, cat:'CGS-NS' },
+  { code:'CGS NS 202', name:'Natural Sciences II', credits:4, cat:'CGS-NS' },
+  // CGS Rhetoric
+  { code:'CGS RH 103', name:'Rhetoric I', credits:4, cat:'CGS-RH' },
+  { code:'CGS RH 104', name:'Rhetoric II', credits:4, cat:'CGS-RH' },
+  // CGS Social Sciences
+  { code:'CGS SS 103', name:'Social Sciences I', credits:4, cat:'CGS-SS' },
+  { code:'CGS SS 104', name:'Social Sciences IV', credits:4, cat:'CGS-SS' },
+  { code:'CGS SS 201', name:'Social Sciences II', credits:4, cat:'CGS-SS' },
+  { code:'CGS SS 202', name:'Social Sciences III', credits:4, cat:'CGS-SS' },
+  // Questrom Required
+  { code:'QST SM 131', name:'Business, Markets & Society', credits:4, cat:'QST-REQ' },
+  { code:'QST AC 221', name:'Financial Accounting', credits:4, cat:'QST-REQ' },
+  { code:'QST BA 221', name:'Introduction to Data & Business Analytics', credits:4, cat:'QST-REQ' },
+  { code:'QST BA 222', name:'Modeling Business Decisions & Market Outcomes', credits:4, cat:'QST-REQ' },
+  { code:'QST BA 223', name:'Business Modeling with Spreadsheets', credits:4, cat:'QST-REQ' },
+  { code:'QST FE 223', name:'Introduction to Financial Management', credits:4, cat:'QST-REQ' },
+  { code:'QST IS 223', name:'Information Systems & Emerging Technologies', credits:4, cat:'QST-REQ' },
+  { code:'QST LA 245', name:'Business Law, Contracts & Regulation', credits:4, cat:'QST-REQ' },
+  { code:'QST MK 223', name:'Marketing: Concepts to Consumers', credits:4, cat:'QST-REQ' },
+  { code:'QST MO 221', name:'Leading People & Teams', credits:4, cat:'QST-REQ' },
+  { code:'QST OM 223', name:'Creating Value with Operations & Supply Chain', credits:4, cat:'QST-REQ' },
+  { code:'QST SI 422', name:'Strategy, Innovation & Global Competition', credits:4, cat:'QST-REQ' },
+  { code:'QST SM 275', name:'Critical & Analytic Thinking for Business', credits:4, cat:'QST-REQ' },
+  { code:'QST XP 298', name:'Innovation Project', credits:4, cat:'QST-REQ' },
+  // Global Business Experience
+  { code:'QST XP 301', name:'Global Business Experience', credits:1, cat:'QST-GBE' },
+  // Career Development
+  { code:'QST ES 110', name:'Explore Your Career', credits:1, cat:'QST-CAREER' },
+  { code:'QST ES 210', name:'Build Your Career Toolkit', credits:1, cat:'QST-CAREER' },
+  { code:'QST ES 215', name:'Career Development (replaces ES 110 + 210)', credits:2, cat:'QST-CAREER' },
+  { code:'QST ES 310', name:'Implement Your Career Plan', credits:1, cat:'QST-CAREER' },
+  // Economics
+  { code:'QST BE 101', name:'Intro to Microeconomics for Business', credits:4, cat:'ECON' },
+  { code:'QST BE 102', name:'Intro to Macroeconomics for Business', credits:4, cat:'ECON' },
+  { code:'CAS EC 101', name:'Introductory Microeconomic Analysis', credits:4, cat:'ECON' },
+  { code:'CAS EC 102', name:'Introductory Macroeconomic Analysis', credits:4, cat:'ECON' },
+  // Math
+  { code:'CAS MA 121', name:'Calculus for Life & Social Sciences I', credits:4, cat:'MATH' },
+  { code:'CAS MA 123', name:'Calculus 1', credits:4, cat:'MATH' },
+  // Writing
+  { code:'CAS WR 120', name:'First-Year Writing Seminar', credits:4, cat:'WRITING' },
+];
+
+const CATALOG_MAP = {};
+CATALOG.forEach(c => { CATALOG_MAP[c.code.toUpperCase()] = c; });
+
+// ─── CONCENTRATION CATALOG (elective courses) ─────────────────────────────────
+const CONC_CATALOG = [
+  // Accounting
+  { code:'QST AC 347', name:'Intermediate Accounting 1', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 348', name:'Intermediate Accounting 2', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 414', name:'Financial Statement Analysis', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 420', name:'Introduction to Financial Analytics', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 430', name:'Accounting Research', credits:2, cat:'ELECTIVE' },
+  { code:'QST AC 431', name:'Sustainability Reporting', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 469', name:'Principles of Income Taxation 1', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 498', name:'Directed Study: Accounting', credits:4, cat:'ELECTIVE' },
+  { code:'QST AC 565', name:'Auditing', credits:4, cat:'ELECTIVE' },
+  // Business Analytics
+  { code:'QST BA 305', name:'Business Decision-Making with Data', credits:4, cat:'ELECTIVE' },
+  { code:'QST BA 498', name:'Directed Study: Business Analytics', credits:4, cat:'ELECTIVE' },
+  { code:'QST BA 572', name:'Business Experiments and Causal Methods', credits:4, cat:'ELECTIVE' },
+  { code:'QST BA 576', name:'Machine Learning for Business Analytics', credits:4, cat:'ELECTIVE' },
+  // Behavioral Economics / Policy
+  { code:'QST BE 325', name:'Strategy in the Health and Life Science Sector', credits:4, cat:'ELECTIVE' },
+  { code:'QST BE 350', name:'The Psychology of Decision Making', credits:4, cat:'ELECTIVE' },
+  // Finance
+  { code:'QST FE 342', name:'Money, Financial Markets, and Economic Activity', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 427', name:'International Financial Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 429', name:'Futures, Options, and Financial Risk Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 430', name:'Entertainment Finance', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 433', name:'ESG Equity Investing', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 445', name:'Investment Analysis and Portfolio Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 449', name:'Corporate Financial Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 450', name:'Private Equity: Leveraged Buyouts', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 454', name:'Investment Banking', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 455', name:'Financing New Ventures', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 456', name:'Fixed Income Analysis', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 458', name:'Equity Security Analysis', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 459', name:'Programming for Investments', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 460', name:'Equity Analysis for Strategic Decision Making', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 462', name:'Business Valuation', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 469', name:'Real Estate Finance', credits:4, cat:'ELECTIVE' },
+  { code:'QST FE 498', name:'Directed Study in Finance', credits:4, cat:'ELECTIVE' },
+  // International Management
+  { code:'QST IM 345', name:'Global Business Environment', credits:4, cat:'ELECTIVE' },
+  { code:'QST IM 430', name:'Managing in a Global Environment', credits:4, cat:'ELECTIVE' },
+  { code:'QST IM 445', name:'Multinational Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST IM 471', name:'Made in Italy', credits:4, cat:'ELECTIVE' },
+  { code:'QST IM 475', name:'Global Management Experience', credits:4, cat:'ELECTIVE' },
+  // Information Systems
+  { code:'QST IS 428', name:'Managing Information Security', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 467', name:'Agile Development Methodologies', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 469', name:'Designing Information Systems', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 474', name:'Platform Strategy and Design', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 479', name:'Innovating with Information Technology', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 498', name:'Directed Study: Information Systems', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 565', name:'Managing Data Resources', credits:4, cat:'ELECTIVE' },
+  { code:'QST IS 579', name:'Financial Business Modeling with Spreadsheets', credits:4, cat:'ELECTIVE' },
+  // Law
+  { code:'QST LA 343', name:'Discrimination and the Law: Implications for Business', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 346', name:'Business, Justice, and Responsibility', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 355', name:'Employment Law and Public Policy', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 360', name:'Real Estate Law', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 365', name:'Securities Regulation', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 430', name:'Entertainment Law', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 450', name:'Law and Risk Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST LA 498', name:'Directed Study in Law', credits:4, cat:'ELECTIVE' },
+  // Marketing
+  { code:'QST MK 345', name:'Consumer Insights', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 435', name:'Introduction to the Music Business and Music Marketing', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 447', name:'Marketing Research', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 465', name:'Omni-Channel Retailing', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 467', name:'Global Marketing Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 469', name:'Integrated Marketing Communications', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 470', name:'Pricing Strategy and Tactics', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 475', name:'Luxury Brands', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 487', name:'Branding', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 498', name:'Directed Study in Marketing', credits:4, cat:'ELECTIVE' },
+  { code:'QST MK 542', name:'Digital Marketing Analytics', credits:4, cat:'ELECTIVE' },
+  // Management & Organizations
+  { code:'QST MO 356', name:'Leadership and Management of Social Enterprises', credits:4, cat:'ELECTIVE' },
+  { code:'QST MO 441', name:'Human Resources: People Strategies to Drive Career Performance', credits:4, cat:'ELECTIVE' },
+  { code:'QST MO 448', name:'Negotiations', credits:4, cat:'ELECTIVE' },
+  { code:'QST MO 460', name:'The Leadership Challenge', credits:4, cat:'ELECTIVE' },
+  { code:'QST MO 498', name:'Directed Study in Management & Organizations', credits:4, cat:'ELECTIVE' },
+  { code:'QST MO 520', name:'People Analytics', credits:4, cat:'ELECTIVE' },
+  // Operations & Supply Chain
+  { code:'QST OM 351', name:'Environmentally Sustainable Supply Chains', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 353', name:'Project Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 365', name:'Improving Quality: Six Sigma Certification', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 440', name:'Supply Chain Strategy', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 441', name:'Supply Chain Analysis', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 467', name:'Global Sourcing', credits:4, cat:'ELECTIVE' },
+  { code:'QST OM 498', name:'Directed Study in Operations & Supply Chain', credits:4, cat:'ELECTIVE' },
+  // Policy
+  { code:'QST PL 330', name:'The US Health Care System in Transition', credits:4, cat:'ELECTIVE' },
+  // Strategy & Innovation
+  { code:'QST SI 344', name:'Entrepreneurship: Solving Problems in a Dynamic World', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 348', name:'The Fundamentals of Selling', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 360', name:'Strategy Lab', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 432', name:'Corporate Strategy: Formulation & Implementation', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 435', name:'Entertainment Management', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 445', name:'Managing a Growing Enterprise', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 451', name:'Organizing for Design and Innovation', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 453', name:'Strategies for Environmental Sustainability', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 464', name:'Intellectual Property Strategies', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 469', name:'Real Estate Development', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 471', name:'International Entrepreneurship', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 482', name:'Strategy for Technology-Based Firms', credits:4, cat:'ELECTIVE' },
+  { code:'QST SI 498', name:'Directed Study in Strategy', credits:4, cat:'ELECTIVE' },
+  // CAS – Global Business B-list
+  { code:'CAS EC 320', name:'Economics of Less-Developed Regions', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EC 369', name:'Economic Development of Latin America', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EC 370', name:'The Chinese Economy', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EC 391', name:'International Economics', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EE 304', name:'Environmentally Sustainable Development', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 250', name:'Europe & International Relations', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 271', name:'Introduction to International Relations', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 275', name:'The Making of Asia', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 292', name:'Fundamentals of International Economics', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 307', name:'Introduction to Middle East Politics', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 308', name:'Introduction to Global Resource Geopolitics', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 322', name:'Governing Crises: The Political Economy of Financial Booms & Busts', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 333', name:'Non-State Actors in International Relations', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 336', name:'European Business Environment: Institutions and Enterprise', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 340', name:'Comparative Public Policy', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 373', name:'Global Governance & International Organization', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 395', name:'North-South Relations', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 399', name:'Fundamentals of Global Money', credits:4, cat:'ELECTIVE' },
+  { code:'CAS IR 428', name:'International Negotiations', credits:4, cat:'ELECTIVE' },
+  { code:'CAS SO 206', name:'Introduction to the Sociology of Globalization', credits:4, cat:'ELECTIVE' },
+  { code:'CAS SO 242', name:'Globalization & World Poverty', credits:4, cat:'ELECTIVE' },
+  // CAS – Real Estate B-list
+  { code:'CAS AH 201', name:'Understanding Architecture', credits:4, cat:'ELECTIVE' },
+  { code:'CAS AH 387', name:'Boston Architecture and Urbanism', credits:4, cat:'ELECTIVE' },
+  { code:'CAS AH 399', name:'History of Landscape Architecture', credits:4, cat:'ELECTIVE' },
+  { code:'CAS AN 309', name:'Boston: An Ethnographic Approach', credits:4, cat:'ELECTIVE' },
+  { code:'CAS BI 475', name:'Urban Ecology', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EE 201', name:'Economic Geography', credits:4, cat:'ELECTIVE' },
+  { code:'CAS EE 309', name:'Intermediate Environmental Analysis and Policy', credits:4, cat:'ELECTIVE' },
+  { code:'CAS SO 306', name:"Boston's People and Neighborhoods", credits:4, cat:'ELECTIVE' },
+  { code:'ENG EK 225', name:'Intro to Energy Conservation and Environmental Engineering', credits:4, cat:'ELECTIVE' },
+  { code:'SHA HF 314', name:'Hospitality Market Feasibility and Valuation', credits:2, cat:'ELECTIVE' },
+  { code:'SHA HF 315', name:'Fundamentals of a Hotel Real Estate Deal', credits:2, cat:'ELECTIVE' },
+];
+CONC_CATALOG.forEach(c => { CATALOG.push(c); CATALOG_MAP[c.code.toUpperCase()] = c; });
+
+// ─── CONCENTRATION REQUIREMENTS ───────────────────────────────────────────────
+const CONCENTRATIONS = {
+  'Accounting': {
+    color:'#1E6FBA', abbr:'AC',
+    required:[['QST AC 347']],
+    bList:['QST AC 348','QST AC 414','QST AC 420','QST AC 430','QST AC 431','QST AC 469','QST AC 498','QST AC 565','QST BA 576','QST FE 449','QST IS 565','QST LA 450'],
+    bNeeded:3,
+  },
+  'Business Analytics': {
+    color:'#E07B39', abbr:'BA',
+    required:[['QST BA 305'],['QST IS 565']],
+    bList:['QST AC 420','QST BA 498','QST BA 572','QST BA 576','QST FE 459','QST MK 542','QST MO 520'],
+    bNeeded:2,
+  },
+  'Finance': {
+    color:'#2AAB6C', abbr:'FE',
+    tracks:{
+      'General Finance':{
+        required:[['QST FE 445'],['QST FE 449']],
+        bList:['QST AC 414','QST FE 342','QST FE 427','QST FE 429','QST FE 430','QST FE 433','QST FE 450','QST FE 454','QST FE 455','QST FE 456','QST FE 458','QST FE 459','QST FE 462','QST FE 469','QST FE 498','QST IS 579','QST LA 365'],
+        bNeeded:2,
+      },
+      'Investment Management':{
+        required:[['QST FE 445'],['QST FE 458']],
+        bList:['QST AC 414','QST AC 420','QST FE 342','QST FE 427','QST FE 429','QST FE 433','QST FE 450','QST FE 455','QST FE 456','QST FE 459','QST FE 460','QST FE 469','QST FE 498','QST IS 579'],
+        bNeeded:2,
+      },
+      'Banking':{
+        required:[['QST FE 449','QST FE 462'],['QST FE 454']],
+        bList:['QST AC 414','QST FE 342','QST FE 427','QST FE 429','QST FE 445','QST FE 456','QST FE 460','QST FE 469','QST FE 498','QST IS 579','QST LA 365'],
+        bNeeded:2,
+      },
+      'Corporate Finance':{
+        required:[['QST FE 449']],
+        bList:['QST AC 414','QST AC 420','QST FE 342','QST FE 427','QST FE 430','QST FE 450','QST FE 454','QST FE 455','QST FE 456','QST FE 460','QST FE 462','QST FE 469','QST FE 498','QST IS 579'],
+        bNeeded:3,
+      },
+    },
+  },
+  'Global Business': {
+    color:'#0891B2', abbr:'GB',
+    required:[['QST IM 345']],
+    bList:['CAS EC 320','CAS EC 369','CAS EC 370','CAS EC 391','CAS EE 304','CAS IR 250','CAS IR 271','CAS IR 275','CAS IR 292','CAS IR 307','CAS IR 308','CAS IR 322','CAS IR 333','CAS IR 336','CAS IR 340','CAS IR 373','CAS IR 395','CAS IR 399','CAS IR 428','CAS SO 206','CAS SO 242','QST FE 427','QST IM 430','QST IM 445','QST IM 471','QST IM 475','QST MK 467','QST OM 467','QST SI 471'],
+    bNeeded:3,
+  },
+  'Independent': {
+    color:'#6B7280', abbr:'IND',
+    required:[],
+    bList:[],
+    bNeeded:4,
+    note:'4 custom QST 300/400-level courses (requires advisor approval)',
+  },
+  'Information Systems': {
+    color:'#7C3AED', abbr:'IS',
+    required:[['QST IS 467'],['QST IS 565']],
+    bList:['QST AC 420','QST BA 576','QST FE 449','QST FE 459','QST IS 428','QST IS 469','QST IS 474','QST IS 479','QST IS 498','QST MK 542','QST OM 365','QST OM 441','QST SI 482'],
+    bNeeded:2,
+  },
+  'Innovation & Entrepreneurship': {
+    color:'#D97706', abbr:'IE',
+    required:[['QST SI 344']],
+    bList:['QST FE 455','QST IS 474','QST MO 356','QST SI 348','QST SI 445','QST SI 451','QST SI 464','QST SI 471','QST SI 482','QST SI 498'],
+    bNeeded:3,
+  },
+  'Law': {
+    color:'#B45309', abbr:'LA',
+    required:[['QST LA 355'],['QST LA 450']],
+    bList:['QST BE 325','QST BE 350','QST LA 343','QST LA 346','QST LA 360','QST LA 365','QST LA 430','QST LA 498','QST MO 356','QST MO 441','QST MO 448','QST PL 330','QST SI 445','QST SI 464','QST SI 469'],
+    bNeeded:2,
+  },
+  'Management & Organizations': {
+    color:'#BE185D', abbr:'MO',
+    required:[['QST MO 460']],
+    bList:['QST BE 350','QST IM 430','QST IS 467','QST LA 343','QST LA 355','QST MK 345','QST MO 356','QST MO 441','QST MO 448','QST MO 498','QST MO 520','QST OM 353','QST SI 445','QST SI 451'],
+    bNeeded:3,
+  },
+  'Marketing': {
+    color:'#C0392B', abbr:'MK',
+    required:[['QST MK 447','QST MK 542']],
+    bList:['QST BA 572','QST BA 576','QST BE 350','QST FE 449','QST IM 471','QST IS 474','QST MK 345','QST MK 435','QST MK 447','QST MK 465','QST MK 467','QST MK 469','QST MK 470','QST MK 475','QST MK 487','QST MK 498','QST MK 542','QST MO 448','QST SI 435','QST SI 451'],
+    bNeeded:3,
+  },
+  'Operations & Supply Chain': {
+    color:'#047857', abbr:'OM',
+    required:[['QST OM 441']],
+    bList:['QST BA 305','QST IS 467','QST IS 565','QST MO 448','QST OM 351','QST OM 353','QST OM 365','QST OM 440','QST OM 467','QST OM 498','QST SI 360'],
+    bNeeded:3,
+  },
+  'Real Estate': {
+    color:'#6D28D9', abbr:'RE',
+    required:[['QST FE 469']],
+    bList:['CAS AH 201','CAS AH 387','CAS AH 399','CAS AN 309','CAS BI 475','CAS EE 201','CAS EE 304','CAS EE 309','CAS SO 306','ENG EK 225','QST FE 456','QST LA 360','QST SI 469','SHA HF 314','SHA HF 315'],
+    bNeeded:3,
+  },
+  'Strategy': {
+    color:'#27AE60', abbr:'SI',
+    required:[['QST SI 432']],
+    bList:['QST BA 305','QST BE 325','QST FE 460','QST IM 345','QST IM 475','QST IS 474','QST MK 447','QST SI 360','QST SI 451','QST SI 453','QST SI 464','QST SI 482','QST SI 498'],
+    bNeeded:3,
+  },
+};
+
+function inferCat(code) {
+  const u = code.toUpperCase();
+  if (u.startsWith('CGS HU')) return 'CGS-HU';
+  if (u.startsWith('CGS NS')) return 'CGS-NS';
+  if (u.startsWith('CGS RH')) return 'CGS-RH';
+  if (u.startsWith('CGS SS')) return 'CGS-SS';
+  if (u.startsWith('QST ES')) return 'QST-CAREER';
+  if (u.startsWith('QST XP 301')) return 'QST-GBE';
+  if (u.startsWith('QST XP')) return 'QST-REQ';
+  if (u.startsWith('QST BE') || u.startsWith('CAS EC')) return 'ECON';
+  if (u.startsWith('CAS MA')) return 'MATH';
+  if (u.startsWith('CAS WR')) return 'WRITING';
+  if (u.startsWith('QST')) return 'QST-REQ';
+  if (u.startsWith('CGS')) return 'CGS-HU';
+  return 'ELECTIVE';
+}
+
+const CAT_LABELS = {
+  'CGS-HU':'CGS HU','CGS-NS':'CGS NS','CGS-RH':'CGS RH','CGS-SS':'CGS SS',
+  'QST-REQ':'QST','QST-CAREER':'Career','QST-GBE':'Global',
+  'ECON':'Econ','MATH':'Math','WRITING':'Writing','ELECTIVE':'Elective'
+};
+
+const CAT_COLORS = {
+  'CGS-HU':'#7C3AED','CGS-NS':'#059669','CGS-RH':'#D97706','CGS-SS':'#DC2626',
+  'QST-REQ':'#CC0000','QST-CAREER':'#2563EB','QST-GBE':'#0891B2',
+  'ECON':'#047857','MATH':'#6D28D9','WRITING':'#BE185D','ELECTIVE':'#9CA3AF'
+};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let showSummers = true;
+let enteringYear = 2026;
+let waived = {};
+let selectedConcentrations = [null, null]; // each: null | {name, track}
+let overlapMap = {}; // code.toUpperCase() → [concName, ...]
+let concBListExpanded = new Set(); // keys: "name|track" for expanded B-lists
+
+function mkCourse(partial = {}) {
+  return {
+    id: Math.random().toString(36).slice(2,11),
+    code: '',
+    name: '',
+    credits: 4,
+    cat: null,
+    ap: false,
+    ...partial
+  };
+}
+
+function mkSemester(id, label, isSummer) {
+  return {
+    id, label, isSummer,
+    courses: isSummer ? [] : [mkCourse(), mkCourse(), mkCourse(), mkCourse()]
+  };
+}
+
+function buildSemesters(startYear) {
+  const sems = [];
+  // Year 1: spring entry — Spring + optional summers only
+  sems.push({ ...mkSemester('y1-spring', `Spring ${startYear}`,   false), group: 'cgs', groupLabel: 'CGS Year 1' });
+  sems.push({ ...mkSemester('y1-sum1',   `Summer 1 ${startYear}`, true),  group: 'cgs', groupLabel: 'CGS Year 1' });
+  sems.push({ ...mkSemester('y1-sum2',   `Summer 2 ${startYear}`, true),  group: 'cgs', groupLabel: 'CGS Year 1' });
+  // Years 2–4: normal Fall → Spring → Summers
+  const rest = [
+    { n: 2, group: 'cgs',      label: 'CGS Year 2',      fy: startYear,     sy: startYear + 1 },
+    { n: 3, group: 'questrom', label: 'Questrom Year 1', fy: startYear + 1, sy: startYear + 2 },
+    { n: 4, group: 'questrom', label: 'Questrom Year 2', fy: startYear + 2, sy: startYear + 3 },
+  ];
+  rest.forEach(({ n, group, label, fy, sy }) => {
+    sems.push({ ...mkSemester(`y${n}-fall`,   `Fall ${fy}`,     false), group, groupLabel: label });
+    sems.push({ ...mkSemester(`y${n}-spring`, `Spring ${sy}`,   false), group, groupLabel: label });
+    sems.push({ ...mkSemester(`y${n}-sum1`,   `Summer 1 ${sy}`, true),  group, groupLabel: label });
+    sems.push({ ...mkSemester(`y${n}-sum2`,   `Summer 2 ${sy}`, true),  group, groupLabel: label });
+  });
+  return sems;
+}
+
+let semesters = buildSemesters(enteringYear);
+
+function semById(id) { return semesters.find(s => s.id === id); }
+
+// ─── REQUIREMENTS COMPUTATION ─────────────────────────────────────────────────
+function allActiveCourses() {
+  const list = [];
+  semesters.forEach(s => s.courses.forEach(c => {
+    if (c.code.trim()) list.push(c);
+  }));
+  return list;
+}
+
+function hasCourse(courses, codes) {
+  const arr = Array.isArray(codes) ? codes : [codes];
+  return courses.some(c => arr.includes(c.code.trim().toUpperCase()) || arr.includes(c.code.trim()));
+}
+
+function countFrom(courses, codes) {
+  const arr = Array.isArray(codes) ? codes : [codes];
+  return courses.filter(c => arr.includes(c.code.trim().toUpperCase()) || arr.includes(c.code.trim())).length;
+}
+
+function plannerHas(code) {
+  const u = code.toUpperCase();
+  return !!waived[u] || allActiveCourses().some(c => c.code.trim().toUpperCase() === u);
+}
+
+function getConcDef(name, track) {
+  const conc = CONCENTRATIONS[name];
+  if (!conc) return null;
+  if (conc.tracks) return conc.tracks[track] || Object.values(conc.tracks)[0];
+  return conc;
+}
+
+function computeOverlapMap() {
+  const map = {};
+  selectedConcentrations.forEach(sel => {
+    if (!sel) return;
+    const def = getConcDef(sel.name, sel.track);
+    if (!def) return;
+    [...def.required.flat(), ...def.bList].forEach(c => {
+      const u = c.toUpperCase();
+      if (!map[u]) map[u] = [];
+      if (!map[u].includes(sel.name)) map[u].push(sel.name);
+    });
+  });
+  return map;
+}
+
+function pushHash() {
+  history.replaceState(null, '', '#' + encodeState());
+}
+
+function renderAll() {
+  overlapMap = computeOverlapMap();
+  renderPlanner();
+  renderSidebar();
+}
+
+function computeReqs() {
+  const all = allActiveCourses();
+  const codes = all.map(c => c.code.trim().toUpperCase());
+
+  function has(code) { return codes.includes(code.toUpperCase()) || !!waived[code.toUpperCase()]; }
+  function countAny(arr) { return arr.filter(c => has(c)).length; }
+
+  // CGS Humanities: HU 104 required + 2 from {103, 201, 202}
+  const huChoose2 = countAny(['CGS HU 103','CGS HU 201','CGS HU 202']);
+  const huReq = has('CGS HU 104');
+
+  // CGS Natural Sciences: NS 201 + NS 202
+  const ns201 = has('CGS NS 201');
+  const ns202 = has('CGS NS 202');
+
+  // CGS Rhetoric: RH 103 + RH 104
+  const rh103 = has('CGS RH 103');
+  const rh104 = has('CGS RH 104');
+
+  // CGS Social Sciences: SS 104 required + 2 from {103, 201, 202}
+  const ssChoose2 = countAny(['CGS SS 103','CGS SS 201','CGS SS 202']);
+  const ssReq = has('CGS SS 104');
+
+  // Questrom 13 required
+  const qstReqCodes = [
+    'QST SM 131','QST AC 221','QST BA 221',
+    'QST FE 223','QST IS 223','QST LA 245','QST MK 223',
+    'QST MO 221','QST OM 223','QST SI 422','QST SM 275','QST XP 298'
+  ];
+  // BA 222 OR BA 223 (only one)
+  const ba222or223 = has('QST BA 222') || has('QST BA 223');
+  const qstReqMet = qstReqCodes.filter(c => has(c)).length + (ba222or223 ? 1 : 0);
+
+  // Career dev
+  const es215 = has('QST ES 215');
+  const es110 = has('QST ES 110') || es215;
+  const es210 = has('QST ES 210') || es215;
+  const es310 = has('QST ES 310');
+
+  // GBE
+  const gbe = has('QST XP 301');
+
+  // Econ
+  const micro = has('QST BE 101') || has('CAS EC 101');
+  const macro = has('QST BE 102') || has('CAS EC 102');
+
+  // Math
+  const math = has('CAS MA 121') || has('CAS MA 123');
+
+  // Writing
+  const writing = has('CAS WR 120');
+
+  // Gateway (need C or better — we just check if planned)
+  const gateway = ['QST SM 131','QST AC 221','CAS WR 120'];
+  const gatewayMath = has('CAS MA 121') || has('CAS MA 123');
+  const gatewayEcon = has('QST BE 101') || has('CAS EC 101');
+
+  // Electives
+  // CGS fulfills ALL non-concentration elective slots:
+  //   5 liberal arts + 3 non-business + 2 free = 10 total (7 non-mgmt + 3 free)
+  const allCgsCodes = [
+    'CGS HU 103','CGS HU 104','CGS HU 201','CGS HU 202',
+    'CGS NS 201','CGS NS 202','CGS RH 103','CGS RH 104',
+    'CGS SS 103','CGS SS 104','CGS SS 201','CGS SS 202'
+  ];
+  const cgsCourseCount = allCgsCodes.filter(c => has(c)).length;
+
+  const knownReqCodes = new Set([
+    ...qstReqCodes,'QST BA 222','QST BA 223',
+    'QST XP 301','QST ES 110','QST ES 210','QST ES 215','QST ES 310',
+    'QST BE 101','QST BE 102','CAS EC 101','CAS EC 102',
+    'CAS MA 121','CAS MA 123','CAS WR 120',
+    ...allCgsCodes.map(c => c.toUpperCase())
+  ]);
+  // Non-mgmt (7): CGS fills all 7, counting first 7 CGS courses completed
+  const nonMgmtMet = Math.min(cgsCourseCount, 7);
+  // Free (3): CGS courses 8–10 fill these; also any extra non-QST, non-required courses
+  const extraFree = all.filter(c => {
+    const u = c.code.trim().toUpperCase();
+    return !knownReqCodes.has(u) && !u.startsWith('QST');
+  }).length;
+  const freeFromCGS = Math.max(0, cgsCourseCount - 7);
+  const freeMet = Math.min(freeFromCGS + extraFree, 3);
+  // Concentration (5): non-required QST courses
+  const qstElectives = all.filter(c => {
+    const u = c.code.trim().toUpperCase();
+    return u.startsWith('QST') && !knownReqCodes.has(u);
+  }).length;
+
+  // Total credits
+  const totalCredits = all.reduce((sum, c) => sum + (c.credits || 4), 0);
+
+  return {
+    cgs: {
+      hu: { choose2: Math.min(huChoose2, 2), choose2Max: 2, req104: huReq },
+      ns: { ns201, ns202 },
+      rh: { rh103, rh104 },
+      ss: { choose2: Math.min(ssChoose2, 2), choose2Max: 2, req104: ssReq },
+    },
+    qst: {
+      required: { met: qstReqMet, total: 13, ba222or223 },
+      reqDetails: qstReqCodes.map(c => ({ code: c, met: has(c) })),
+      ba222: { met: ba222or223, has222: has('QST BA 222'), has223: has('QST BA 223') },
+      gbe: { met: gbe },
+      career: { es110, es210, es310, es215 },
+      econ: { micro, macro },
+      math: { met: math, ma121: has('CAS MA 121'), ma123: has('CAS MA 123') },
+      writing: { met: writing },
+      gateway: gateway.map(c => ({ code: c, met: has(c) })).concat([
+        { code: 'CAS MA 121 / MA 123', met: gatewayMath },
+        { code: 'QST BE 101 / CAS EC 101', met: gatewayEcon }
+      ]),
+      qstElectives, nonMgmtMet, freeMet, cgsCourseCount,
+    },
+    totalCredits,
+  };
+}
+
+// ─── RENDER SIDEBAR ────────────────────────────────────────────────────────────
+function renderSidebar() {
+  const r = computeReqs();
+  const sidebar = document.getElementById('sidebar');
+  const { cgs, qst, totalCredits } = r;
+
+  function badge(n, total) {
+    const cls = n === total ? 'done' : n > 0 ? 'partial' : 'empty';
+    return `<span class="req-badge ${cls}">${n}/${total}</span>`;
+  }
+  function bar(n, total) {
+    const pct = total ? Math.min(100, Math.round(n/total*100)) : 0;
+    const cls = n === total ? 'done' : '';
+    return `<div class="req-bar"><div class="req-bar-fill ${cls}" style="width:${pct}%"></div></div>`;
+  }
+  function item(met, text) {
+    const cls = met ? 'met' : '';
+    const symbol = met ? '✓' : '';
+    return `<div class="req-item ${cls}"><span class="req-check">${symbol}</span><span>${text}</span></div>`;
+  }
+  function itemNa(met, text, key) {
+    const na = key && !!waived[key.toUpperCase()];
+    const cls = na ? 'waived' : met ? 'met' : '';
+    const symbol = na ? '✦' : met ? '✓' : '';
+    const naLabel = `<label class="sidebar-na"><input type="checkbox" class="sidebar-na-cb" data-key="${(key||'').toUpperCase()}"${na ? ' checked' : ''}><span>N/A</span></label>`;
+    return `<div class="req-item ${cls}"><span class="req-check">${symbol}</span><span style="flex:1">${text}</span>${naLabel}</div>`;
+  }
+
+  // CGS progress counts
+  const huMet = Math.min(cgs.hu.choose2, 2) + (cgs.hu.req104 ? 1 : 0);
+  const nsMet = (cgs.ns.ns201 ? 1 : 0) + (cgs.ns.ns202 ? 1 : 0);
+  const rhMet = (cgs.rh.rh103 ? 1 : 0) + (cgs.rh.rh104 ? 1 : 0);
+  const ssMet = Math.min(cgs.ss.choose2, 2) + (cgs.ss.req104 ? 1 : 0);
+
+  let html = '';
+
+  // ── Concentrations Section
+  html += `<div class="req-section-title">Concentrations</div>`;
+  html += `<div class="conc-picker">`;
+  [0, 1].forEach(slot => {
+    const sel = selectedConcentrations[slot];
+    const concObj = sel ? CONCENTRATIONS[sel.name] : null;
+    const hasTracks = !!(concObj && concObj.tracks);
+    const trackNames = hasTracks ? Object.keys(concObj.tracks) : [];
+    html += `<div class="conc-slot">
+      <select class="conc-select" data-slot="${slot}">
+        <option value="">${slot === 0 ? '— Select concentration —' : '— Add 2nd concentration —'}</option>
+        ${Object.keys(CONCENTRATIONS).map(n =>
+          `<option value="${escHtml(n)}"${sel && sel.name === n ? ' selected' : ''}>${escHtml(n)}</option>`
+        ).join('')}
+      </select>
+      ${hasTracks ? `<select class="conc-select conc-track-sel" data-slot="${slot}">
+        ${trackNames.map(t =>
+          `<option value="${escHtml(t)}"${sel && sel.track === t ? ' selected' : ''}>${escHtml(t)}</option>`
+        ).join('')}
+      </select>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ── Show requirements for each selected concentration
+  selectedConcentrations.forEach(sel => {
+    if (!sel) return;
+    const conc = CONCENTRATIONS[sel.name];
+    if (!conc) return;
+    const def = getConcDef(sel.name, sel.track);
+    if (!def) return;
+
+    const reqResults = def.required.map(opts => ({ opts, met: opts.some(c => plannerHas(c)) }));
+    const bMetCodes = def.bList.filter(c => plannerHas(c));
+    const reqMet = reqResults.filter(r => r.met).length;
+    const bMet = Math.min(bMetCodes.length, def.bNeeded);
+    const totalMet = reqMet + bMet;
+    const totalNeeded = def.required.length + def.bNeeded;
+    const trackLabel = conc.tracks ? ` — ${sel.track}` : '';
+
+    html += `<div class="req-group" style="border-left:3px solid ${conc.color}40;padding-left:8px">
+      <div class="req-group-header">
+        <span class="req-group-name" style="color:${conc.color}">${escHtml(sel.name)}${escHtml(trackLabel)}</span>
+        ${badge(totalMet, totalNeeded)}
+      </div>
+      ${bar(totalMet, totalNeeded)}`;
+
+    if (def.required.length > 0) {
+      html += `<div class="conc-sub-label">Required</div>`;
+      reqResults.forEach((r, i) => {
+        const displayNames = r.opts.map(c => {
+          const entry = CATALOG_MAP[c.toUpperCase()];
+          const shortCode = c.replace(/^QST /, '');
+          return entry ? `${shortCode} — ${entry.name}` : c;
+        });
+        const text = displayNames.length > 1 ? displayNames.join(' <em>or</em> ') : displayNames[0];
+        const key = `CONC-${sel.name}-${sel.track || ''}-REQ-${i}`.replace(/\s+/g, '_').toUpperCase();
+        html += itemNa(r.met, text, key);
+      });
+    }
+
+    if (conc.note) {
+      html += `<div style="font-size:.68rem;color:var(--muted);margin-top:4px;font-style:italic">${escHtml(conc.note)}</div>`;
+    }
+
+    html += `<div class="conc-sub-label">Electives (${bMet}/${def.bNeeded} needed)</div>`;
+    bMetCodes.forEach(c => {
+      const entry = CATALOG_MAP[c.toUpperCase()];
+      const shortCode = c.replace(/^QST /, '');
+      const label = entry ? `${shortCode} — ${entry.name}` : c;
+      html += item(true, label);
+    });
+    const stillNeeded = def.bNeeded - bMetCodes.length;
+    if (stillNeeded > 0) {
+      html += `<div class="req-item"><span class="req-check"></span>
+        <span style="color:var(--muted);font-style:italic">${stillNeeded} more from B-list electives</span>
+      </div>`;
+    }
+
+    if (def.bList.length > 0) {
+      const blistKey = `${sel.name}|${sel.track || ''}`;
+      const expanded = concBListExpanded.has(blistKey);
+      const unmet = def.bList.filter(c => !plannerHas(c));
+      html += `<button class="blist-toggle" data-blist-key="${escHtml(blistKey)}">
+        ${expanded ? '▾' : '▸'} ${expanded ? 'Hide' : 'Show'} B-list (${def.bList.length} courses)
+      </button>`;
+      if (expanded) {
+        html += `<div class="blist-list">`;
+        def.bList.forEach(c => {
+          const met = plannerHas(c);
+          const entry = CATALOG_MAP[c.toUpperCase()];
+          const shortCode = c.replace(/^QST /, '');
+          const label = entry ? `${shortCode} — ${entry.name}` : c;
+          if (met) {
+            html += item(true, label);
+          } else {
+            html += `<div class="blist-item"><span style="width:13px;flex-shrink:0">○</span><span>${label}</span></div>`;
+          }
+        });
+        html += `</div>`;
+      }
+    }
+    html += `</div>`;
+  });
+
+  // ── CGS Section
+  html += `<div class="req-section-title">CGS Requirements</div>`;
+
+  // Humanities
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Humanities</span>${badge(huMet, 3)}
+    </div>
+    ${bar(huMet, 3)}
+    ${itemNa(cgs.hu.choose2 >= 1, 'Choose 1 of: HU 103, HU 201, or HU 202', 'CGS-HU-CHOOSE1')}
+    ${itemNa(cgs.hu.choose2 >= 2, 'Choose 2nd of: HU 103, HU 201, or HU 202', 'CGS-HU-CHOOSE2')}
+    ${itemNa(cgs.hu.req104, 'CGS HU 104 — Humanities IV (required)', 'CGS HU 104')}
+  </div>`;
+
+  // Natural Sciences
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Natural Sciences</span>${badge(nsMet, 2)}
+    </div>
+    ${bar(nsMet, 2)}
+    ${itemNa(cgs.ns.ns201, 'CGS NS 201 — Natural Sciences I', 'CGS NS 201')}
+    ${itemNa(cgs.ns.ns202, 'CGS NS 202 — Natural Sciences II', 'CGS NS 202')}
+  </div>`;
+
+  // Rhetoric
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Rhetoric</span>${badge(rhMet, 2)}
+    </div>
+    ${bar(rhMet, 2)}
+    ${itemNa(cgs.rh.rh103, 'CGS RH 103 — Rhetoric I', 'CGS RH 103')}
+    ${itemNa(cgs.rh.rh104, 'CGS RH 104 — Rhetoric II', 'CGS RH 104')}
+  </div>`;
+
+  // Social Sciences
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Social Sciences</span>${badge(ssMet, 3)}
+    </div>
+    ${bar(ssMet, 3)}
+    ${itemNa(cgs.ss.choose2 >= 1, 'Choose 1 of: SS 103, SS 201, or SS 202', 'CGS-SS-CHOOSE1')}
+    ${itemNa(cgs.ss.choose2 >= 2, 'Choose 2nd of: SS 103, SS 201, or SS 202', 'CGS-SS-CHOOSE2')}
+    ${itemNa(cgs.ss.req104, 'CGS SS 104 — Social Sciences IV (required)', 'CGS SS 104')}
+  </div>`;
+
+  // ── Questrom Section
+  html += `<div class="req-section-title">Questrom Requirements</div>`;
+
+  // Required courses
+  const reqNames = {
+    'QST SM 131':'SM 131 — Business, Markets & Society',
+    'QST AC 221':'AC 221 — Financial Accounting',
+    'QST BA 221':'BA 221 — Data & Business Analytics',
+    'QST FE 223':'FE 223 — Financial Management',
+    'QST IS 223':'IS 223 — Information Systems',
+    'QST LA 245':'LA 245 — Business Law',
+    'QST MK 223':'MK 223 — Marketing',
+    'QST MO 221':'MO 221 — Leading People & Teams',
+    'QST OM 223':'OM 223 — Operations & Supply Chain',
+    'QST SI 422':'SI 422 — Strategy & Innovation',
+    'QST SM 275':'SM 275 — Critical & Analytic Thinking',
+    'QST XP 298':'XP 298 — Innovation Project',
+  };
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Required Courses</span>${badge(qst.required.met, 13)}
+    </div>
+    ${bar(qst.required.met, 13)}`;
+  qst.reqDetails.forEach(d => {
+    html += itemNa(d.met, reqNames[d.code] || d.code, d.code);
+  });
+  html += itemNa(qst.ba222.met, 'BA 222 — Modeling Business Decisions (or BA 223)', 'QST-BA-222-OR-223');
+  html += `</div>`;
+
+  // Gateway
+  const gatewayMet = qst.gateway.filter(g => g.met).length;
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Gateway (min grade C)</span>${badge(gatewayMet, 5)}
+    </div>
+    ${bar(gatewayMet, 5)}
+    ${qst.gateway.map(g => itemNa(g.met, g.code, g.code)).join('')}
+  </div>`;
+
+  // Economics
+  const econMet = (qst.econ.micro ? 1 : 0) + (qst.econ.macro ? 1 : 0);
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Economics</span>${badge(econMet, 2)}
+    </div>
+    ${bar(econMet, 2)}
+    ${itemNa(qst.econ.micro, 'Microeconomics (BE 101 or CAS EC 101)', 'QST-MICRO')}
+    ${itemNa(qst.econ.macro, 'Macroeconomics (BE 102 or CAS EC 102)', 'QST-MACRO')}
+  </div>`;
+
+  // Math + Writing
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Math &amp; Writing</span>${badge((qst.math.met?1:0)+(qst.writing.met?1:0), 2)}
+    </div>
+    ${bar((qst.math.met?1:0)+(qst.writing.met?1:0), 2)}
+    ${itemNa(qst.math.met, 'Calculus (CAS MA 121 or MA 123)', 'QST-MATH')}
+    ${itemNa(qst.writing.met, 'CAS WR 120 — First-Year Writing', 'CAS WR 120')}
+  </div>`;
+
+  // Career Development
+  const careerMet = (qst.career.es110?1:0)+(qst.career.es210?1:0)+(qst.career.es310?1:0);
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Career Development</span>${badge(careerMet, 3)}
+    </div>
+    ${bar(careerMet, 3)}
+    ${itemNa(qst.career.es110, 'ES 110 — Explore Your Career (1 cr)'+(qst.career.es215?' via ES 215':''), 'QST ES 110')}
+    ${itemNa(qst.career.es210, 'ES 210 — Build Career Toolkit (1 cr)'+(qst.career.es215?' via ES 215':''), 'QST ES 210')}
+    ${itemNa(qst.career.es310, 'ES 310 — Implement Career Plan (1 cr)', 'QST ES 310')}
+  </div>`;
+
+  // Global Business Experience
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Global Business Experience</span>${badge(qst.gbe.met?1:0, 1)}
+    </div>
+    ${bar(qst.gbe.met?1:0, 1)}
+    ${itemNa(qst.gbe.met, 'XP 301 — Global Business Experience (1 cr)', 'QST XP 301')}
+  </div>`;
+
+  // Electives
+  const qstElecMet = Math.min(qst.qstElectives, 5);
+  const nonMgmtMet = qst.nonMgmtMet;
+  const freeMet = qst.freeMet;
+  const elecAll = qstElecMet >= 5 && nonMgmtMet >= 7 && freeMet >= 3;
+  const elecBadgeCls = elecAll ? 'done' : (qstElecMet+nonMgmtMet+freeMet > 0 ? 'partial' : 'empty');
+  html += `<div class="req-group">
+    <div class="req-group-header">
+      <span class="req-group-name">Electives</span>
+      <span class="req-badge ${elecBadgeCls}" style="font-size:.65rem">see below</span>
+    </div>
+    <div class="req-item ${nonMgmtMet >= 7 ? 'met' : ''}" style="margin-top:4px">
+      <span class="req-check">${nonMgmtMet >= 7 ? '✓' : ''}</span>
+      <span>Non-management electives: ${nonMgmtMet}/7
+        <span style="color:#9CA3AF;font-size:.65rem;display:block">Covered by CGS completion</span>
+      </span>
+    </div>
+    <div class="req-item ${freeMet >= 3 ? 'met' : ''}">
+      <span class="req-check">${freeMet >= 3 ? '✓' : ''}</span>
+      <span>Free electives: ${freeMet}/3
+        <span style="color:#9CA3AF;font-size:.65rem;display:block">Covered by CGS completion</span>
+      </span>
+    </div>
+    <div class="req-item ${qstElecMet >= 5 ? 'met' : ''}">
+      <span class="req-check">${qstElecMet >= 5 ? '✓' : ''}</span>
+      <span>Concentration electives (QST): ${qstElecMet}/5</span>
+    </div>
+  </div>`;
+
+  // Concentration note
+  html += `<div style="font-size:.7rem;color:var(--muted);background:var(--bg);border-radius:6px;padding:8px;margin-top:4px;line-height:1.45">
+    <strong style="color:var(--text)">Concentration:</strong> Must complete at least 1 concentration (5 Questrom elective courses).
+    Options: Accounting, Business Analytics, Finance, Global Business, Info Systems, Innovation &amp; Entrepreneurship, Law, Management &amp; Orgs, Marketing, Operations &amp; Supply Chain, Real Estate, Strategy.
+  </div>`;
+
+  // Total credits
+  html += `<div class="total-box">
+    <div>
+      <div class="lbl">Total Credits Planned</div>
+      <div style="font-size:.7rem;color:var(--muted)">132 required to graduate</div>
+    </div>
+    <div style="text-align:right">
+      <span class="num">${totalCredits}</span>
+      <span class="denom"> / 132</span>
+    </div>
+  </div>`;
+
+  sidebar.innerHTML = html;
+
+  // Wire N/A checkboxes
+  sidebar.querySelectorAll('.sidebar-na-cb').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = cb.dataset.key;
+      if (cb.checked) waived[key] = true;
+      else delete waived[key];
+      renderSidebar();
+    });
+  });
+
+  // Wire B-list toggles
+  sidebar.querySelectorAll('.blist-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.blistKey;
+      if (concBListExpanded.has(key)) concBListExpanded.delete(key);
+      else concBListExpanded.add(key);
+      renderSidebar();
+    });
+  });
+
+  // Wire concentration selects
+  sidebar.querySelectorAll('.conc-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const slot = parseInt(sel.dataset.slot);
+      if (sel.classList.contains('conc-track-sel')) {
+        if (selectedConcentrations[slot]) selectedConcentrations[slot].track = sel.value;
+      } else {
+        if (sel.value) {
+          const conc = CONCENTRATIONS[sel.value];
+          const track = conc && conc.tracks ? Object.keys(conc.tracks)[0] : null;
+          selectedConcentrations[slot] = { name: sel.value, track };
+        } else {
+          selectedConcentrations[slot] = null;
+        }
+      }
+      renderAll();
+    });
+  });
+
+  // Update header
+  document.getElementById('total-header').textContent = `${totalCredits} / 132 credits planned`;
+
+  pushHash();
+}
+
+// ─── RENDER PLANNER ───────────────────────────────────────────────────────────
+function renderPlanner() {
+  overlapMap = computeOverlapMap();
+  const planner = document.getElementById('planner');
+
+  // Group by year group
+  const groups = {};
+  semesters.forEach(s => {
+    if (!groups[s.groupLabel]) groups[s.groupLabel] = { type: s.group, sems: [] };
+    groups[s.groupLabel].sems.push(s);
+  });
+
+  let html = '';
+  Object.entries(groups).forEach(([label, {type, sems}]) => {
+    const visibleSems = sems.filter(s => !s.isSummer || showSummers);
+    const groupCredits = visibleSems.reduce((sum, s) =>
+      sum + s.courses.reduce((cs, c) => cs + (c.credits || 4), 0), 0);
+
+    html += `<div class="year-group" data-group="${label}">
+      <div class="year-header">
+        <span class="year-badge ${type}">${label}</span>
+        <div class="year-header-line"></div>
+        <span class="year-credits">${groupCredits} cr</span>
+      </div>
+      <div class="semesters-row">`;
+
+    visibleSems.forEach(sem => {
+      html += renderSemCard(sem);
+    });
+
+    html += `</div></div>`;
+  });
+
+  planner.innerHTML = html;
+  attachPlannerEvents();
+}
+
+function semesterCredits(sem) {
+  return sem.courses.reduce((s, c) => s + (c.credits || 4), 0);
+}
+
+function renderSemCard(sem) {
+  const credits = semesterCredits(sem);
+  const canAdd = sem.courses.length < 5;
+  const sumClass = sem.isSummer ? ' is-summer' : '';
+
+  let coursesHtml = sem.courses.map(c => renderCourseItem(sem.id, c)).join('');
+
+  return `<div class="sem-card${sumClass}" data-sem-id="${sem.id}">
+    <div class="sem-header">
+      <span class="sem-title">${sem.label}</span>
+      <span class="sem-credits-badge">${credits} cr</span>
+    </div>
+    <div class="course-list" data-courses="${sem.id}">${coursesHtml}</div>
+    <div style="padding:0 8px 8px">
+      <button class="add-course-btn" data-sem="${sem.id}" ${canAdd?'':'disabled'}>
+        + Add Course ${canAdd ? '' : '(max 5)'}
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderCourseItem(semId, course) {
+  const cat = course.cat || (course.code ? inferCat(course.code) : null);
+  const barColor = cat ? CAT_COLORS[cat] : '#DDE2EA';
+  const catLabel = cat ? (CAT_LABELS[cat] || cat) : '';
+  const bgCls = cat ? `bg-${cat}` : '';
+  const canRemove = semById(semId).courses.length > 1;
+
+  const concNames = course.code ? (overlapMap[course.code.trim().toUpperCase()] || []) : [];
+  const overlapHtml = concNames.length > 0
+    ? `<div class="overlap-tags">${concNames.map(n => {
+        const c = CONCENTRATIONS[n];
+        return `<span class="overlap-tag" style="background:${c.color}18;color:${c.color};border:1px solid ${c.color}55" title="${n}">${c.abbr}</span>`;
+      }).join('')}</div>`
+    : '';
+
+  return `<div class="course-item" data-course-id="${course.id}" data-sem-id="${semId}">
+    <div class="cat-bar" style="background:${barColor}"></div>
+    <div class="course-body">
+      <div class="course-code-wrap">
+        <input
+          class="course-code-input"
+          type="text"
+          placeholder="Course code or name"
+          value="${escHtml(course.code)}"
+          data-course-id="${course.id}"
+          data-sem-id="${semId}"
+          autocomplete="off"
+        >
+        <div class="ac-dropdown" id="ac-${course.id}"></div>
+      </div>
+      <div class="course-name" title="${escHtml(course.name)}">${escHtml(course.name) || '&nbsp;'}</div>
+      <div class="course-meta">
+        ${catLabel ? `<span class="course-credits-tag ${bgCls}">${catLabel}</span>` : ''}
+        <span class="course-credits-tag">${course.credits} cr</span>
+      </div>
+      ${overlapHtml}
+    </div>
+    <button class="remove-btn" data-remove="${course.id}" data-sem="${semId}" ${canRemove?'':'disabled'} title="Remove course">×</button>
+  </div>`;
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────────
+let activeAc = null;
+
+function getMatches(query) {
+  if (!query || query.length < 2) return [];
+  const q = query.toUpperCase();
+  return CATALOG.filter(c =>
+    c.code.toUpperCase().includes(q) || c.name.toUpperCase().includes(q)
+  ).slice(0, 10);
+}
+
+function showAc(courseId, semId, inputEl) {
+  const dropdown = document.getElementById(`ac-${courseId}`);
+  if (!dropdown) return;
+  const matches = getMatches(inputEl.value.trim());
+  if (!matches.length) { dropdown.classList.remove('open'); return; }
+
+  dropdown.innerHTML = matches.map((m, i) => {
+    const bgCls = `bg-${m.cat}`;
+    return `<div class="ac-item" data-idx="${i}" data-code="${escHtml(m.code)}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <span class="ac-code">${escHtml(m.code)}</span>
+        <span class="ac-cat ${bgCls}">${CAT_LABELS[m.cat]||m.cat}</span>
+      </div>
+      <div class="ac-name">${escHtml(m.name)} · ${m.credits} cr</div>
+    </div>`;
+  }).join('');
+
+  dropdown.classList.add('open');
+  activeAc = { courseId, semId, inputEl, matches, focusIdx: -1, selecting: false };
+
+  dropdown.addEventListener('mousedown', e => { e.preventDefault(); }, { once: true });
+
+  dropdown.querySelectorAll('.ac-item').forEach((el, i) => {
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      if (activeAc) activeAc.selecting = true;
+      selectAcItem(i);
+    });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      selectAcItem(i);
+    });
+  });
+}
+
+function selectAcItem(idx) {
+  if (!activeAc) return;
+  const { courseId, semId, matches } = activeAc;
+  const chosen = matches[idx];
+  if (!chosen) return;
+  updateCourse(semId, courseId, {
+    code: chosen.code,
+    name: chosen.name,
+    credits: chosen.credits,
+    cat: chosen.cat,
+  });
+  closeAc();
+}
+
+function closeAc() {
+  if (activeAc) {
+    const d = document.getElementById(`ac-${activeAc.courseId}`);
+    if (d) d.classList.remove('open');
+    activeAc = null;
+  }
+}
+
+// ─── EVENT HANDLING ───────────────────────────────────────────────────────────
+function attachPlannerEvents() {
+  const planner = document.getElementById('planner');
+
+  // Delegate course-code input
+  planner.querySelectorAll('.course-code-input').forEach(input => {
+    const courseId = input.dataset.courseId;
+    const semId = input.dataset.semId;
+
+    input.addEventListener('input', () => {
+      const val = input.value;
+      const known = CATALOG_MAP[val.toUpperCase()];
+      if (known) {
+        updateCourse(semId, courseId, { code: val, name: known.name, credits: known.credits, cat: known.cat });
+        closeAc();
+      } else {
+        const cat = val.trim() ? inferCat(val) : null;
+        updateCourseField(semId, courseId, 'code', val);
+        updateCourseField(semId, courseId, 'cat', cat);
+        if (!val.trim()) {
+          updateCourseField(semId, courseId, 'name', '');
+        }
+        showAc(courseId, semId, input);
+      }
+    });
+
+    input.addEventListener('keydown', e => {
+      if (!activeAc || activeAc.courseId !== courseId) return;
+      const items = document.querySelectorAll(`#ac-${courseId} .ac-item`);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeAc.focusIdx = Math.min(activeAc.focusIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('focused', i === activeAc.focusIdx));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeAc.focusIdx = Math.max(activeAc.focusIdx - 1, -1);
+        items.forEach((el, i) => el.classList.toggle('focused', i === activeAc.focusIdx));
+      } else if (e.key === 'Enter' && activeAc.focusIdx >= 0) {
+        e.preventDefault();
+        selectAcItem(activeAc.focusIdx);
+      } else if (e.key === 'Escape') {
+        closeAc();
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      // Small delay so mousedown on ac-item fires first
+      setTimeout(closeAc, 150);
+    });
+  });
+
+  // Remove course buttons
+  planner.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const courseId = btn.dataset.remove;
+      const semId = btn.dataset.sem;
+      const sem = semById(semId);
+      if (sem.courses.length <= 1) return;
+      sem.courses = sem.courses.filter(c => c.id !== courseId);
+      rerenderSem(semId);
+      renderSidebar();
+    });
+  });
+
+  // Add course buttons
+  planner.querySelectorAll('[data-sem]').forEach(btn => {
+    if (!btn.classList.contains('add-course-btn')) return;
+    btn.addEventListener('click', () => {
+      const semId = btn.dataset.sem;
+      const sem = semById(semId);
+      if (sem.courses.length >= 5) return;
+      sem.courses.push(mkCourse());
+      rerenderSem(semId);
+      renderSidebar();
+    });
+  });
+}
+
+function rerenderSem(semId) {
+  overlapMap = computeOverlapMap();
+  const sem = semById(semId);
+  const card = document.querySelector(`.sem-card[data-sem-id="${semId}"]`);
+  if (!card) return;
+  const newCard = document.createElement('div');
+  newCard.innerHTML = renderSemCard(sem);
+  const newEl = newCard.firstElementChild;
+  card.replaceWith(newEl);
+  // Re-attach events for this card only
+  const planner = document.getElementById('planner');
+  attachPlannerEvents();
+  // Re-update year group credits label
+  updateYearCredits();
+}
+
+function updateYearCredits() {
+  document.querySelectorAll('.year-group').forEach(group => {
+    const label = group.dataset.group;
+    const g = Object.entries(groupsMap()).find(([l]) => l === label);
+    if (!g) return;
+    const {sems} = g[1];
+    const visibleSems = sems.filter(s => !s.isSummer || showSummers);
+    const credits = visibleSems.reduce((sum, s) =>
+      sum + s.courses.reduce((cs, c) => cs + (c.credits || 4), 0), 0);
+    const yc = group.querySelector('.year-credits');
+    if (yc) yc.textContent = `${credits} cr`;
+  });
+}
+
+function groupsMap() {
+  const groups = {};
+  semesters.forEach(s => {
+    if (!groups[s.groupLabel]) groups[s.groupLabel] = { type: s.group, sems: [] };
+    groups[s.groupLabel].sems.push(s);
+  });
+  return groups;
+}
+
+function updateCourse(semId, courseId, fields) {
+  const sem = semById(semId);
+  const course = sem.courses.find(c => c.id === courseId);
+  if (course) Object.assign(course, fields);
+  rerenderSem(semId);
+  renderSidebar();
+}
+
+function updateCourseField(semId, courseId, field, value) {
+  const sem = semById(semId);
+  const course = sem.courses.find(c => c.id === courseId);
+  if (course) course[field] = value;
+  // Don't re-render here — only for sidebar update
+  renderSidebar();
+  // Update the cat bar color live
+  const courseEl = document.querySelector(`[data-course-id="${courseId}"]`);
+  if (courseEl) {
+    const bar = courseEl.querySelector('.cat-bar');
+    if (bar && field === 'cat') {
+      bar.style.background = value ? (CAT_COLORS[value] || '#DDE2EA') : '#DDE2EA';
+    }
+  }
+}
+
+// ─── CONTROLS ─────────────────────────────────────────────────────────────────
+document.getElementById('toggle-summers').addEventListener('click', function() {
+  showSummers = !showSummers;
+  this.classList.toggle('active', showSummers);
+  this.textContent = `☀ ${showSummers ? 'Hide' : 'Show'} Summer Sessions`;
+  renderAll();
+});
+
+document.getElementById('entering-year').addEventListener('change', function() {
+  const yr = parseInt(this.value);
+  if (isNaN(yr) || yr < 2020 || yr > 2035) return;
+  enteringYear = yr;
+  const newSems = buildSemesters(yr);
+  // Transfer existing course data by position
+  newSems.forEach((newS, i) => {
+    const oldS = semesters[i];
+    if (oldS) newS.courses = oldS.courses;
+  });
+  semesters = newSems;
+  renderAll();
+});
+
+function copyText(text) {
+  // Try modern API first; fall back to textarea trick which works on HTTP
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy') ? resolve() : reject(); }
+    catch(e) { reject(e); }
+    finally { document.body.removeChild(ta); }
+  });
+}
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const encoded = encodeState();
+  const url = location.href.split('#')[0] + '#' + encoded;
+  history.replaceState(null, '', '#' + encoded);
+  const btn = document.getElementById('save-btn');
+  copyText(url).then(() => {
+    btn.textContent = '✓ Link Copied!';
+    setTimeout(() => btn.textContent = '🔗 Copy Link', 2000);
+  }).catch(() => {
+    prompt('Copy this link to share your plan:', url);
+  });
+  // Also persist to localStorage as backup
+  try { localStorage.setItem('bu-planner-v2', JSON.stringify({ semesters, enteringYear, showSummers, waived, selectedConcentrations })); } catch(_) {}
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (!confirm('Clear all planned courses? This cannot be undone.')) return;
+  semesters = buildSemesters(enteringYear);
+  renderAll();
+});
+
+// Close AC on outside click
+document.addEventListener('click', e => {
+  if (activeAc && !e.target.closest('.course-code-wrap')) closeAc();
+});
+
+// ─── PERSISTENCE ──────────────────────────────────────────────────────────────
+
+// Unicode-safe base64
+function toB64(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
+}
+function fromB64(str) {
+  return decodeURIComponent(Array.from(atob(str), c => '%' + c.charCodeAt(0).toString(16).padStart(2,'0')).join(''));
+}
+
+function encodeState() {
+  const compact = {
+    y: enteringYear,
+    s: showSummers ? 1 : 0,
+    d: semesters
+      .filter(sem => sem.courses.some(c => c.code.trim()))
+      .map(sem => ({
+        id: sem.id,
+        c: sem.courses
+          .filter(c => c.code.trim())
+          .map(c => {
+            const o = { q: c.code };
+            if (c.name) o.n = c.name;
+            if (c.credits !== 4) o.cr = c.credits;
+            if (c.cat) o.cat = c.cat;
+            return o;
+          })
+      }))
+  };
+  const wKeys = Object.keys(waived);
+  if (wKeys.length) compact.w = wKeys;
+  const selC = selectedConcentrations.filter(Boolean).map(s => s.track ? `${s.name}|${s.track}` : s.name);
+  if (selC.length) compact.c = selC;
+  return toB64(JSON.stringify(compact));
+}
+
+function decodeState(encoded) {
+  const raw = JSON.parse(fromB64(encoded));
+  enteringYear = raw.y || 2026;
+  showSummers = raw.s !== 0;
+  waived = {};
+  (raw.w || []).forEach(k => { waived[k] = true; });
+  selectedConcentrations = [null, null];
+  (raw.c || []).forEach((str, i) => {
+    if (i >= 2) return;
+    const pipe = str.indexOf('|');
+    if (pipe > -1) {
+      selectedConcentrations[i] = { name: str.slice(0, pipe), track: str.slice(pipe + 1) };
+    } else {
+      const conc = CONCENTRATIONS[str];
+      selectedConcentrations[i] = { name: str, track: conc && conc.tracks ? Object.keys(conc.tracks)[0] : null };
+    }
+  });
+  const base = buildSemesters(enteringYear);
+  const dataMap = {};
+  (raw.d || []).forEach(s => { dataMap[s.id] = s.c || []; });
+  base.forEach(sem => {
+    if (dataMap[sem.id]) {
+      sem.courses = dataMap[sem.id].map(c => mkCourse({
+        code: c.q || '',
+        name: c.n || '',
+        credits: c.cr || 4,
+        cat: c.cat || (c.q ? inferCat(c.q) : null),
+      }));
+      if (!sem.courses.length) sem.courses = sem.isSummer ? [] : [mkCourse(),mkCourse(),mkCourse(),mkCourse()];
+    }
+  });
+  semesters = base;
+}
+
+function applyUIState() {
+  document.getElementById('entering-year').value = enteringYear;
+  const btn = document.getElementById('toggle-summers');
+  btn.classList.toggle('active', showSummers);
+  btn.textContent = `☀ ${showSummers ? 'Hide' : 'Show'} Summer Sessions`;
+}
+
+function loadSaved() {
+  // 1. Try URL hash first
+  const hash = location.hash.slice(1);
+  if (hash) {
+    try {
+      decodeState(hash);
+      applyUIState();
+      return true;
+    } catch(_) {}
+  }
+  // 2. Fall back to localStorage
+  try {
+    const raw = localStorage.getItem('bu-planner-v2');
+    if (!raw) return false;
+    const saved = JSON.parse(raw);
+    enteringYear = saved.enteringYear || 2026;
+    showSummers = saved.showSummers !== false;
+    waived = {};
+    if (saved.waived) Object.assign(waived, saved.waived);
+    selectedConcentrations = [null, null];
+    if (saved.selectedConcentrations) {
+      saved.selectedConcentrations.forEach((s, i) => { if (i < 2) selectedConcentrations[i] = s; });
+    }
+    const base = buildSemesters(enteringYear);
+    const savedMap = {};
+    (saved.semesters || []).forEach(s => { savedMap[s.id] = s; });
+    base.forEach(s => {
+      if (savedMap[s.id]) s.courses = savedMap[s.id].courses || s.courses;
+    });
+    semesters = base;
+    applyUIState();
+    return true;
+  } catch(_) { return false; }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadSaved();
+renderAll();
+</script>
+</body>
+</html>
