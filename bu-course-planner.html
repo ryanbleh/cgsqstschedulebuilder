@@ -1842,7 +1842,8 @@ document.getElementById('short-btn').addEventListener('click', async () => {
   btn.textContent = '⏳ Shortening…';
   btn.disabled = true;
   try {
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
+    const apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`;
+    const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl));
     if (!res.ok) throw new Error('API error');
     const short = await res.text();
     await copyText(short.trim());
