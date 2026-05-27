@@ -1888,9 +1888,12 @@ function encodeState() {
           .filter(c => c.code.trim())
           .map(c => {
             const o = { q: c.code };
-            if (c.name) o.n = c.name;
-            if (c.credits !== 4) o.cr = c.credits;
-            if (c.cat) o.cat = c.cat;
+            const lookup = CATALOG_MAP[c.code.trim().toUpperCase()];
+            // Only store name if it differs from the catalog (custom/edited names)
+            if (c.name && (!lookup || c.name !== lookup.name)) o.n = c.name;
+            if (c.credits !== 4 && (!lookup || c.credits !== lookup.credits)) o.cr = c.credits;
+            // Only store cat if it differs from what inferCat would return
+            if (c.cat && c.cat !== inferCat(c.code)) o.cat = c.cat;
             return o;
           })
       }))
@@ -1924,12 +1927,15 @@ function decodeState(encoded) {
   (raw.d || []).forEach(s => { dataMap[s.id] = s.c || []; });
   base.forEach(sem => {
     if (dataMap[sem.id]) {
-      sem.courses = dataMap[sem.id].map(c => mkCourse({
-        code: c.q || '',
-        name: c.n || '',
-        credits: c.cr || 4,
-        cat: c.cat || (c.q ? inferCat(c.q) : null),
-      }));
+      sem.courses = dataMap[sem.id].map(c => {
+        const lookup = c.q ? CATALOG_MAP[c.q.trim().toUpperCase()] : null;
+        return mkCourse({
+          code: c.q || '',
+          name: c.n || (lookup ? lookup.name : ''),
+          credits: c.cr || (lookup ? lookup.credits : 4),
+          cat: c.cat || (c.q ? inferCat(c.q) : null),
+        });
+      });
       if (!sem.courses.length) sem.courses = sem.isSummer ? [] : [mkCourse(),mkCourse(),mkCourse(),mkCourse()];
     }
   });
